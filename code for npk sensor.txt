@@ -1,0 +1,67 @@
+#include <Wire.h>
+#include <Adafruit_ADS1015.h>
+
+Adafruit_ADS1115 ads;  // Create an ADS1115 object
+
+// Calibration factors for NPK calculation (adjust based on sensor response)
+#define CALIBRATION_FACTOR_NITROGEN 1.0 // Adjust based on calibration
+#define CALIBRATION_FACTOR_PHOSPHORUS 1.0 // Adjust based on calibration
+#define CALIBRATION_FACTOR_POTASSIUM 1.0 // Adjust based on calibration
+
+// Define threshold values based on your calibration
+#define NITROGEN_THRESHOLD_HIGH 800   // Example threshold for high nitrogen levels
+#define PHOSPHORUS_THRESHOLD_HIGH 750
+#define POTASSIUM_THRESHOLD_HIGH 700
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Initialize I2C with specified pins D4 (SDA) and D5 (SCL)
+  Wire.begin(D4, D5);  // SDA, SCL
+  
+  ads.begin();  // Initialize the ADS1115
+}
+
+void loop() {
+  int16_t adc0, adc1, adc2;
+
+  // Read analog values from ADS1115
+  adc0 = ads.readADC_SingleEnded(0);  // Reading from A0
+  adc1 = ads.readADC_SingleEnded(1);  // Reading from A1
+  adc2 = ads.readADC_SingleEnded(2);  // Reading from A2
+
+  // Convert sensor readings to NPK values in mg/L
+  float nitrogenNPK = adc0 * CALIBRATION_FACTOR_NITROGEN;
+  float phosphorusNPK = adc1 * CALIBRATION_FACTOR_PHOSPHORUS;
+  float potassiumNPK = adc2 * CALIBRATION_FACTOR_POTASSIUM;
+
+  // Print NPK values to the Serial Monitor
+  Serial.print("Nitrogen NPK (mg/L): ");
+  Serial.println(nitrogenNPK);
+  Serial.print("Phosphorus NPK (mg/L): ");
+  Serial.println(phosphorusNPK);
+  Serial.print("Potassium NPK (mg/L): ");
+  Serial.println(potassiumNPK);
+
+  // Check if any values exceed the high threshold
+  if (nitrogenNPK > NITROGEN_THRESHOLD_HIGH) {
+    Serial.println("Nitrogen levels are high.");
+  } else {
+    Serial.println("Nitrogen levels are normal.");
+  }
+
+  if (phosphorusNPK > PHOSPHORUS_THRESHOLD_HIGH) {
+    Serial.println("Phosphorus levels are high.");
+  } else {
+    Serial.println("Phosphorus levels are normal.");
+  }
+
+  if (potassiumNPK > POTASSIUM_THRESHOLD_HIGH) {
+    Serial.println("Potassium levels are high.");
+  } else {
+    Serial.println("Potassium levels are normal.");
+  }
+
+  // Wait for a second before taking another reading
+  delay(1000);
+}
